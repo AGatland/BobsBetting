@@ -15,22 +15,22 @@ namespace BobsBetting.CacheModels
         public GameRounds CurrentRound { get; set; }
         public int CurrentPlayerId { get; set; }
         public int PotSize { get; set; }
-        public List<Card> CommunityCards { get; set; }
-        public List<PlayerState> PlayerStates { get; set; }
+        public List<Card>? CommunityCards { get; set; }
+        public List<PlayerState>? PlayerStates { get; set; }
     }
 
     public class PlayerState
     {
         public int UserId { get; set;}
         public int CurrentBet { get; set;}
-        public List<Card> HandCards { get; set;}
+        public List<Card>? HandCards { get; set;}
         public bool IsFolded { get; set;}
     }
 
     public class Card
     {
         public int Rank { get; set;}
-        public string Suit { get; set;}
+        public required string Suit { get; set;}
     }
 
 }
