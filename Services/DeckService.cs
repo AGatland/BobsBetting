@@ -3,51 +3,37 @@ namespace BobsBetting.Services {
 
     public class DeckService
     {
-        public List<Card> Deck { get; set; } = [];
         readonly List<int> cardRanks = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
         readonly List<string> cardSuits = ["Diamonds", "Spades", "Hearts", "Clubs"];
-
+        
         public DeckService()
         {
-            CreateDeck();
-            Shuffle();
         }
 
-        public void CreateDeck()
+        public List<Card> CreateAndShuffleDeck()
         {
+            List<Card> deck = new List<Card>();
             foreach (int cardRank in cardRanks)
             {
                 foreach (string cardSuit in cardSuits)
                 {
-                    Deck.Add(new Card(cardRank, cardSuit));
+                    deck.Add(new Card(cardRank, cardSuit));
                 }
             }
+
+            Shuffle(deck);
+            return deck;
         }
 
-        public void Shuffle()
+        private void Shuffle(List<Card> deck)
         {
-            Random rng = new();
-            int n = Deck.Count;
+            Random rng = new Random();
+            int n = deck.Count;
             while (n > 1)
             {
                 n--;
                 int k = rng.Next(n + 1);
-                (Deck[n], Deck[k]) = (Deck[k], Deck[n]);
-            }
-        }
-
-        public Card Deal() 
-        {
-            if (Deck.Count == 0)
-            {
-                return new Card(0, string.Empty); // Return an empty CardItem if the deck is empty
-            }
-            else
-            {
-                // Deal from the top of the deck
-                Card card = Deck[0]; // Access the first item
-                Deck.RemoveAt(0); // Remove the card from the deck
-                return card; // Return the dealt card
+                (deck[n], deck[k]) = (deck[k], deck[n]);
             }
         }
     }

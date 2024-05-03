@@ -9,32 +9,23 @@ namespace BobsBetting.CacheModels
         RIVER
     }
 
-    public class ActiveGameState
+    public class ActiveGameState(List<Player> players, List<Card> communityCards)
     {
         public int GameId { get; set; }
-        public GameRounds CurrentRound { get; set; }
-        public int CurrentPlayerId { get; set; }
-        public int PotSize { get; set; }
-        public List<Card> CommunityCards { get; set; } = [];
-        public List<Player> PlayerStates { get; set; } = [];
+        public GameRounds CurrentRound { get; set; } = GameRounds.PREFLOP;
+        public int CurrentPlayerId { get; set; } = 0;
+        public int PotSize { get; set; } = 0;
+        public List<Card> CommunityCards { get; set; } = communityCards;
+        public List<Player> PlayerStates { get; set; } = players;
     }
 
-    public class Player
+    public class Player(int userId)
     {
-        public int UserId { get; set;}
-        public int CurrentBet { get; set;}
+
+        public int UserId { get; set;} = userId;
+        public int CurrentBet { get; set;} = 0;
         public List<Card> Hand { get; set;} = [];
-        public bool IsFolded { get; set;}
-
-        internal void ReceiveCard(Card card)
-        {
-            Hand.Add(card);
-        }
-
-        internal void ClearHand()
-        {
-            Hand.Clear();
-        }
+        public bool IsFolded { get; set;} = false;
     }
 
     public class Card(int rank, string suit)

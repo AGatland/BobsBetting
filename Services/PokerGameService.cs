@@ -1,33 +1,56 @@
 namespace BobsBetting.Services {
     using BobsBetting.Calculate;
     using BobsBetting.CacheModels;
+    using BobsBetting.DBModels;
 
-    public class PokerGameService(List<Player> players, DeckService deck)
+    public class PokerGameService(DeckService deckService, GameCacheService gameCacheService)
     {
-        public List<Player> Players { get; set; } = players;
-        public DeckService Deck { get; set; } = deck;
-        public List<Card> TableCards { get; set; } = [];
+        private readonly DeckService _deckService = deckService;
+        private readonly GameCacheService _gameCacheService = gameCacheService;
 
-        public void RunGame() {
-            DealCards();
-            PickWinner();
+        public void StartGame(List<User> users)
+        {
+            var deck = _deckService.CreateAndShuffleDeck();
+            _gameCacheService.SetGameState(1, DealCards(users, deck));
+            //var winner = PickWinner(players, deck);
+            // Handle game completion...
         }
 
-        public void DealCards() {
-            foreach (Player player in Players) {
-                for (int i = 0; i < 2; i++)
-                player.ReceiveCard(Deck.Deal());
+        private ActiveGameState DealCards(List<User> users, List<Card> deck)
+        {
+            List<Player> players = [];
+            foreach (User user in users)
+            {
+                players.Add(new Player(user.Id));
             }
-            
-            for (int i = 0; i < 5; i++) {
-                TableCards.Add(Deck.Deal());
+            foreach (Player player in players)
+            {
+                if (deck.Count >= 2)
+                    player.Hand.Add(deck[0]);  // Deal one card
+                    player.Hand.Add(deck[1]);  // Deal Second card
+                    deck.RemoveAt(0);  // Remove the dealt card
+                    deck.RemoveAt(0);  // Remove the dealt card
             }
+            List<Card> communityCards = [];
+            if (deck.Count >= 5) {
+                for (int i = 0; i < 5; i++) {
+                    communityCards.Add(deck[0]);
+                    deck.RemoveAt(0);
+                }
+            }
+            return new ActiveGameState(players, communityCards);
         }
 
-        public List<Player> PickWinner() {
+        public List<Player> PickWinner(int gameId) {
+            // Get game data from MEM DB
+            ActiveGameState activeGameState = _gameCacheService.GetGameState(gameId);
+            List<Player> players = activeGameState.PlayerStates;
+            List<Card> communityCards = activeGameState.CommunityCards;
+
+
             List<Tuple<Player, int>> handGrades = [];
-            foreach (Player player in Players) {
-                var handGrade = HandGrade.CalcHand(player.Hand, TableCards);
+            foreach (Player player in players) {
+                var handGrade = HandGrade.CalcHand(player.Hand, communityCards);
                 handGrades.Add(new Tuple<Player, int>(player, handGrade));
             }
             var maxScore = handGrades.Select(i => i.Item2).Max();
@@ -37,7 +60,7 @@ namespace BobsBetting.Services {
                 return competitors;
             }
 
-            var playersComp = competitors.Select(player => new PlayerHandDetails(player, TableCards)).ToList();
+            var playersComp = competitors.Select(player => new PlayerHandDetails(player, communityCards)).ToList();
 
             // Calculate winner when more than one got the top hand grade
             switch(maxScore) {
