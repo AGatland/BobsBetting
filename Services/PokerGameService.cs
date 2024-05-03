@@ -2,18 +2,18 @@ namespace BobsBetting.Services {
     using BobsBetting.Calculate;
     using BobsBetting.CacheModels;
     using BobsBetting.DBModels;
+    using System.Data.Common;
 
     public class PokerGameService(DeckService deckService, GameCacheService gameCacheService)
     {
         private readonly DeckService _deckService = deckService;
         private readonly GameCacheService _gameCacheService = gameCacheService;
 
-        public void StartGame(List<User> users)
+        public void StartGame(Lobby lobby)
         {
             var deck = _deckService.CreateAndShuffleDeck();
-            _gameCacheService.SetGameState(1, DealCards(users, deck));
-            //var winner = PickWinner(players, deck);
-            // Handle game completion...
+            _gameCacheService.SetGameState(lobby.LobbyId, DealCards(lobby.Users, deck));
+            
         }
 
         private ActiveGameState DealCards(List<User> users, List<Card> deck)
@@ -41,13 +41,21 @@ namespace BobsBetting.Services {
             return new ActiveGameState(players, communityCards);
         }
 
-        public List<Player> PickWinner(int gameId) {
+        public Tuple<List<Player>, int> SettleGame(int gameId) {
             // Get game data from MEM DB
             ActiveGameState activeGameState = _gameCacheService.GetGameState(gameId);
-            List<Player> players = activeGameState.PlayerStates;
+            List<Player> players = activeGameState.PlayerStates.Where(p => !p.IsFolded).ToList();
             List<Card> communityCards = activeGameState.CommunityCards;
 
+            List<Player> winners = PickWinner(players, communityCards);
 
+            // 1 token might be lost?
+            int winnings = activeGameState.PlayerStates.Select(p => p.CurrentBet).Sum()/winners.Count;
+
+            return new Tuple<List<Player>, int> (winners, winnings);
+        }
+
+        public List<Player> PickWinner(List<Player> players, List<Card> communityCards) {
             List<Tuple<Player, int>> handGrades = [];
             foreach (Player player in players) {
                 var handGrade = HandGrade.CalcHand(player.Hand, communityCards);

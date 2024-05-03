@@ -1,3 +1,4 @@
+using BobsBetting.DBModels;
 using Microsoft.EntityFrameworkCore;
 
 namespace BobsBetting.CacheModels 
@@ -9,12 +10,18 @@ namespace BobsBetting.CacheModels
         RIVER
     }
 
+    public class Lobby
+    {
+        public int LobbyId { get; set; } = DateTime.Now.Ticks.GetHashCode();
+        public int LobbyLeader { get; set; }
+        public List<User> Users { get; set; } = [];
+    }
+
     public class ActiveGameState(List<Player> players, List<Card> communityCards)
     {
         public int GameId { get; set; }
         public GameRounds CurrentRound { get; set; } = GameRounds.PREFLOP;
         public int CurrentPlayerId { get; set; } = 0;
-        public int PotSize { get; set; } = 0;
         public List<Card> CommunityCards { get; set; } = communityCards;
         public List<Player> PlayerStates { get; set; } = players;
     }
