@@ -7,9 +7,9 @@ using Microsoft.EntityFrameworkCore;
 using BobsBetting.DBModels;
 using BobsBetting.CacheModels;
 using BobsBetting.DTOs;
-
-// Cors
-string MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+using BobsBetting.Hub;
+using BobsBetting.DataService;
+using BobsBetting.Services;
 
 // Init web app builder
 var builder = WebApplication.CreateBuilder(args);
@@ -20,6 +20,12 @@ builder.Services.AddNpgsql<BBDb>(connectionString);
 
 builder.Services.AddMemoryCache();
 
+builder.Services.AddSingleton<SharedDb>();
+
+builder.Services.AddScoped<DeckService>();
+builder.Services.AddScoped<GameCacheService>();
+builder.Services.AddScoped<PokerGameService>();
+
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -28,22 +34,23 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 // Cors
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy(name: MyAllowSpecificOrigins,
-      builder =>
-      {
-          builder.WithOrigins("*")
+builder.Services.AddCors(opt => {
+    opt.AddPolicy("reactApp", builder => {
+        builder.WithOrigins("http://localhost:5173")
+            .AllowAnyHeader()
             .AllowAnyMethod()
-            .AllowAnyHeader();
-      });
+            .AllowCredentials();
+    });
 });
+
+// SignalR
+builder.Services.AddSignalR();
 
 // Init app
 var app = builder.Build();
 
 // Cors
-app.UseCors(MyAllowSpecificOrigins);
+app.UseCors("reactApp");
 
 // Use swagger if in Dev env
 if (app.Environment.IsDevelopment())
@@ -55,8 +62,27 @@ if (app.Environment.IsDevelopment())
    });
 }
 
+
 // ---------------- Endpoints ----------------
+
+// SignalR
+app.MapHub<GameHub>("/game/lobby");
     
 app.MapGet("/", () => "Hello World!");
+
+app.MapPost("/login", async (BBDb db, LoginDto loginDto) =>
+{
+    // Find user with matching username
+    var user = await db.Users.FirstOrDefaultAsync(u => u.Username == loginDto.Username);
+
+    // If no user is found or the password doesn't match, return unauthorized
+    if (user is null || user.Password != loginDto.Password)
+    {
+        return Results.Unauthorized();
+    }
+
+    // If user is found and password matches, return success
+    return Results.Ok(new LoginResDto(user.Id, user.Username, user.Email, user.Chips));
+});
     
 app.Run();

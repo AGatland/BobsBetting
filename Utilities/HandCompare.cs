@@ -99,6 +99,7 @@ namespace BobsBetting.Calculate
         }
 
 
+        // TODO: If there are three pairs total, the logic breaks down :(
         public static List<Player> CompareTwoPairsHands(List<PlayerHandDetails> players)
         {
 
