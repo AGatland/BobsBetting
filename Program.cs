@@ -84,5 +84,10 @@ app.MapPost("/login", async (BBDb db, LoginDto loginDto) =>
     // If user is found and password matches, return success
     return Results.Ok(new LoginResDto(user.Id, user.Username, user.Email, user.Chips));
 });
+
+app.MapGet("/user/{id}", async (BBDb db, int id) => {
+    var user = await db.Users.FirstOrDefaultAsync(u=> u.Id == id);
+    return user;
+});
     
 app.Run();

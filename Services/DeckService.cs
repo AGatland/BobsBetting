@@ -3,7 +3,7 @@ namespace BobsBetting.Services {
 
     public class DeckService
     {
-        readonly List<int> cardRanks = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
+        readonly List<int> cardRanks = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
         readonly List<string> cardSuits = ["Diamonds", "Spades", "Hearts", "Clubs"];
         
         public DeckService()
