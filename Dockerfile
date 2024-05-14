@@ -1,6 +1,6 @@
 # Use the official Microsoft .NET 8 SDK image for building the project.
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /src
+WORKDIR /
 #COPY ["BobsBetting/BobsBetting.csproj", "./"]
 RUN dotnet restore "BobsBetting.csproj"
 
