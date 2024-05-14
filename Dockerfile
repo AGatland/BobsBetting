@@ -1,17 +1,13 @@
-# Start with the .NET SDK Image
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /app
+WORKDIR /App
+EXPOSE 8080
 
-# Copy csproj file and restore any NuGet packages it requires
-COPY *.csproj ./
+COPY . .
 RUN dotnet restore
-
-# Copy the rest of the files and build
-COPY . ./
-RUN dotnet build -c Release -o out
+RUN dotnet publish -o /App/out
 
 # Build runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
-WORKDIR /app
-COPY --from=build /app/out ./
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 as runtime
+WORKDIR /App
+COPY --from=build /App/out .
 ENTRYPOINT ["dotnet", "BobsBetting.dll"]

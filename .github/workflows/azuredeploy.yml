@@ -23,11 +23,13 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }} # Ensure this secret is set in GitHub secrets
 
-    - name: Set Connection String
+    - name: Install jq
+      run: sudo apt-get install jq
+  
+    - name: Insert Database Connection String into appsettings.json
       run: |
-        echo "POKER_DB_CONNECTION_STRING=${{ secrets.POKER_DB_CONNECTION_STRING }}" > appsettings.Production.json
-      env:
-        POKER_DB_CONNECTION_STRING: ${{ secrets.POKER_DB_CONNECTION_STRING }}
+        jq '.ConnectionStrings.POKER_DB_CONNECTION_STRING = "${{ secrets.POKER_DB_CONNECTION_STRING }}"' appsettings.json > appsettings.temp.json
+        mv appsettings.temp.json appsettings.json
 
     - name: Build and push Docker image to Azure Container Registry
       run: |
