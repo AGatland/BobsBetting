@@ -15,17 +15,6 @@ namespace BobsBetting.Hub {
         private readonly SharedDb _shared = shared;
         private readonly PokerGameService _pkg = pkg;
 
-/*
-        public override async Task OnConnectedAsync() {
-            await Clients.All.SendAsync("ReceiveMessage", $"{Context.ConnectionId} has joined");
-        }*/
-
-/*
-        public async Task JoinLobby(UserConnectionReq conn)
-        {
-            await Clients.All.SendAsync("ReceiveMessage", $"{conn.UserId} has joined");
-        }*/
-
         public async Task JoinSpecificLobby(UserConnectionReq conn)
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, conn.LobbyId);
@@ -88,22 +77,22 @@ namespace BobsBetting.Hub {
             if (gameState.PublicPlayerStates.Count != 0) {
                 await Clients.Group(conn.LobbyId)
                     .SendAsync("ReceiveUpdatedGame", gameState.CommunityCards[..cardsToShow], roundNames[gameState.CurrentRound], gameState.CurrentPlayerId, gameState.PublicPlayerStates, gameState.CurrentPot);
-                if (gameState.GameEnded) {
-                    await Clients.Group(conn.LobbyId).SendAsync("ReceiveGameResult", _pkg.SettleGame(conn.LobbyId));
+                if (gameState.GameEnded && !gameState.PublicPlayerStates.Any(p => p.LastAction.ActionType == ActionType.Raise || p.LastAction.ActionType == ActionType.AllIn)) {
+                    List<WinnerData> winnerDatas = _pkg.SettleGame(conn.LobbyId);
+                    List<PublicPlayer> publicPlayers = gameState.PublicPlayerStates;
+                    foreach (PublicPlayer publicPlayer in publicPlayers) {
+                        User userToUpdate = await db.Users.FindAsync(publicPlayer.UserId);
+                        if (winnerDatas.Any(w => w.UserId == publicPlayer.UserId)) {
+                            userToUpdate.Chips += winnerDatas[0].Winnings - publicPlayer.CurrentBet;
+                        } else {
+                            userToUpdate.Chips -= publicPlayer.CurrentBet;
+                        }
+                        await db.SaveChangesAsync();
+                    }
+                    await Clients.Group(conn.LobbyId).SendAsync("ReceiveGameResult", winnerDatas);
                 }
             }
         }
-
-/*
-        public async Task JoinSpecificLobby(string lobbyId, int userId)
-        {
-            if (_lobbies.ContainsKey(lobbyId))
-            {
-                _lobbies[lobbyId].Add(new(Context.ConnectionId, userId));
-                await Groups.AddToGroupAsync(Context.ConnectionId, lobbyId);
-                await Clients.Group(lobbyId).SendAsync("PlayerJoined", Context.ConnectionId);
-            }
-        }*/
 
 /*
         public async Task LeaveLobby(string lobbyId, int userId)
@@ -116,43 +105,5 @@ namespace BobsBetting.Hub {
             }
         }*/
 
-/*
-        public async Task StartGame(string lobbyId)
-        {
-            if (_lobbies.ContainsKey(lobbyId))
-            {
-                var gameState = new ActiveGameState();
-                var deck = _deckService.CreateAndShuffleDeck();
-                
-                // Assuming each player has been added to a lobby
-                foreach (var player in _lobbies[lobbyId])
-                {
-                    var playerState = new PlayerState
-                    {
-                        ConnectionId = player.ConnectionId
-                    };
-                    playerState.HandCards.Add(deck.Deal());
-                    playerState.HandCards.Add(deck.Deal());
-                    gameState.Players.Add(playerState);
-                }
-
-                // Deal community cards
-                for (int i = 0; i < 5; i++) {
-                    gameState.CommunityCards.Add(deck.Deal());
-                }
-
-                // Store the game state
-                _gameCacheService.SetGameState(gameState.GameId, gameState);
-
-                // Notify each player of their private cards
-                foreach (var player in gameState.Players)
-                {
-                    await Clients.Client(player.ConnectionId).SendAsync("ReceiveHand", player.HandCards);
-                }
-
-                // Notify all players in the lobby of the initial game state (public information)
-                await Clients.Group(lobbyId).SendAsync("GameStarted", gameState.CommunityCards, gameState.PotSize);
-            }
-        }*/
     }
 }

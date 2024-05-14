@@ -53,8 +53,9 @@ namespace BobsBetting.CacheModels
         public bool IsFolded { get; set;} = false;
     }
 
-    public class WinnerData(string username, int winnings, string handGrade)
+    public class WinnerData(int userId, string username, int winnings, string handGrade)
     {
+        public int UserId { get; set;} = userId;
         public string Username { get; set;} = username;
         public int Winnings { get; set;} = winnings;
         public string HandGrade { get; set; } = handGrade;

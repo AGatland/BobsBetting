@@ -70,7 +70,9 @@ public class HandlePlayerAction()
             if (activeGameState.CurrentRound == GameRounds.RIVER) {
                 Console.WriteLine("Game end: River complete");
                 activeGameState.GameEnded = true;
-                return activeGameState;
+                if (activeGameState.GameEnded && !activeGameState.PublicPlayerStates.Any(p => p.LastAction.ActionType == ActionType.Raise || p.LastAction.ActionType == ActionType.AllIn)) {
+                    return activeGameState;
+                }
             } else {
                 activeGameState.CurrentRound++; // Moves to the next round enum value
             }

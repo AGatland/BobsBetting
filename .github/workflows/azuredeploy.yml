@@ -1,0 +1,40 @@
+name: Build and Deploy to Azure App Service
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  REGISTRY_LOGIN_SERVER: 'bobsbetting.azurecr.io' # Replace <your-acr-name> with your ACR name
+  AZURE_WEBAPP_NAME: 'bobs-betting-be' # Replace with your Azure Web App name
+  IMAGE_NAME: 'bobsbettingbe' # Name of the image to use
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Log in to Azure CLI
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }} # Ensure this secret is set in GitHub secrets
+
+    - name: Set Connection String
+      run: |
+        echo "POKER_DB_CONNECTION_STRING=${{ secrets.POKER_DB_CONNECTION_STRING }}" > appsettings.Production.json
+      env:
+        POKER_DB_CONNECTION_STRING: ${{ secrets.POKER_DB_CONNECTION_STRING }}
+
+    - name: Build and push Docker image to Azure Container Registry
+      run: |
+        az acr build --registry ${{ env.REGISTRY_LOGIN_SERVER }} --image ${{ env.IMAGE_NAME }}:latest .
+
+    - name: Deploy image to Azure App Service
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        images: '${{ env.REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest'

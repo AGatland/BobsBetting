@@ -15,7 +15,7 @@ using BobsBetting.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // Database connection
-var connectionString = builder.Configuration.GetConnectionString("PokerDB");
+var connectionString = builder.Configuration.GetConnectionString("POKER_DB_CONNECTION_STRING");
 builder.Services.AddNpgsql<BBDb>(connectionString);
 
 builder.Services.AddMemoryCache();

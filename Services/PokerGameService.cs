@@ -46,7 +46,7 @@ namespace BobsBetting.Services {
 
         public ActiveGameState HandleTurn(string LobbyId, User user, PlayerActionReq action) {
             ActiveGameState gameState = _gameCacheService.GetGameState(LobbyId);
-            if (gameState.CurrentPlayerId != gameState.PublicPlayerStates.Find(p => p.UserId == user.Id).TurnNumber || gameState.GameEnded) {
+            if (gameState.CurrentPlayerId != gameState.PublicPlayerStates.Find(p => p.UserId == user.Id).TurnNumber || (gameState.GameEnded && !gameState.PublicPlayerStates.Any(p => p.LastAction.ActionType == ActionType.Raise || p.LastAction.ActionType == ActionType.AllIn)) || (gameState.GameEnded &&(action.ActionType == 2 || action.ActionType == 3))) {
                 return new([],[],[],0);
             }
             switch (action.ActionType)
@@ -88,7 +88,7 @@ namespace BobsBetting.Services {
             //TODO: Need to persistenly save winning data.
             List<WinnerData> winnerDatas = [];
             foreach (Tuple<int, string> winner in winners) {
-                winnerDatas.Add(new WinnerData(publicPlayers.Find(p => p.UserId == winner.Item1).Username, winnings, winner.Item2));
+                winnerDatas.Add(new WinnerData(winner.Item1, publicPlayers.Find(p => p.UserId == winner.Item1).Username, winnings, winner.Item2));
             }
 
             return winnerDatas;
