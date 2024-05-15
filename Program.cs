@@ -35,7 +35,7 @@ builder.Services.AddSwaggerGen(c =>
 // Cors
 builder.Services.AddCors(opt => {
     opt.AddPolicy("reactApp", builder => {
-        builder.WithOrigins("http://localhost:5173")
+        builder.WithOrigins("https://agreeable-meadow-066fe7903.5.azurestaticapps.net")
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
