@@ -64,6 +64,7 @@ if (app.Environment.IsDevelopment())
 
 // ---------------- Endpoints ----------------
 
+
 // SignalR
 app.MapHub<GameHub>("/game/lobby");
     
