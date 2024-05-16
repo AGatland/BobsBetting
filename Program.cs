@@ -91,5 +91,8 @@ app.MapGet("/user/{id}", async (BBDb db, int id) => {
     var user = await db.Users.FirstOrDefaultAsync(u=> u.Id == id);
     return user;
 });
+
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080"; // Default to 8080 if PORT is not set
+app.Urls.Add($"http://*:{port}");
     
 app.Run();

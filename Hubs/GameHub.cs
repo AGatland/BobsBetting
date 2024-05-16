@@ -5,13 +5,11 @@ namespace BobsBetting.Hub {
     using BobsBetting.DBModels;
     using BobsBetting.Models;
     using BobsBetting.Services;
-    using Microsoft.AspNetCore.Identity;
     using Microsoft.AspNetCore.SignalR;
 
     internal class GameHub(BBDb _db, SharedDb shared, PokerGameService pkg) : Hub
     {
         private readonly BBDb db = _db;
-
         private readonly SharedDb _shared = shared;
         private readonly PokerGameService _pkg = pkg;
 

@@ -1,10 +1,8 @@
 using Microsoft.Extensions.Caching.Memory;
-using System;
 
 namespace BobsBetting.Services
 {
     using BobsBetting.CacheModels;
-    using BobsBetting.DBModels;
 
     public class GameCacheService
     {
