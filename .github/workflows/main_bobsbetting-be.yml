@@ -21,6 +21,14 @@ jobs:
         with:
           dotnet-version: '8.x'
           include-prerelease: true
+      
+      - name: Install jq
+        run: sudo apt-get install jq
+      
+      - name: Insert Database Connection String into appsettings.json
+        run: |
+          jq '.ConnectionStrings.POKER_DB_CONNECTION_STRING = "${{ secrets.POKER_DB_CONNECTION_STRING }}"' appsettings.json > appsettings.temp.json
+          mv appsettings.temp.json appsettings.json
 
       - name: Build with dotnet
         run: dotnet build --configuration Release
