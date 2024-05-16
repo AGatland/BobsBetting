@@ -26,6 +26,14 @@ jobs:
         username: ${{ secrets.AzureAppService_ContainerUsername_d38f75c3949740c3a3d599a91bb16dbe }}
         password: ${{ secrets.AzureAppService_ContainerPassword_3dc5b489b1854be494c92286f9e52e22 }}
 
+    - name: Install jq
+      run: sudo apt-get install jq
+  
+    - name: Insert Database Connection String into appsettings.json
+      run: |
+        jq '.ConnectionStrings.POKER_DB_CONNECTION_STRING = "${{ secrets.POKER_DB_CONNECTION_STRING }}"' appsettings.json > appsettings.temp.json
+        mv appsettings.temp.json appsettings.json
+
     - name: Build and push container image to registry
       uses: docker/build-push-action@v3
       with:
