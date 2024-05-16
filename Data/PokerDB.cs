@@ -2,14 +2,23 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BobsBetting.DBModels 
 {
-    public class User
+// User class
+public class User
+{
+    public int Id { get; set; }
+    public string Username { get; set; }
+    public string Email { get; set; }
+    public int Chips { get; set; } = 1000;
+    public string Password { get; set; }
+
+    // Constructor to initialize the properties
+    public User(string username, string email, string password)
     {
-        public int Id { get; set;}
-        public required string Username { get; set;}
-        public required string Email { get; set;}
-        public int Chips { get; set;} = 1000;
-        public required string Password { get; set;}
+        Username = username;
+        Email = email;
+        Password = password;
     }
+}
 
         class BBDb : DbContext
     {

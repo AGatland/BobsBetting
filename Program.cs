@@ -25,6 +25,15 @@ builder.Services.AddScoped<DeckService>();
 builder.Services.AddScoped<GameCacheService>();
 builder.Services.AddScoped<PokerGameService>();
 
+// Configure logging
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
+builder.Logging.AddEventSourceLogger();
+
+// Application Insights
+builder.Services.AddApplicationInsightsTelemetry(builder.Configuration["ApplicationInsights:InstrumentationKey"]);
+
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -61,6 +70,23 @@ if (app.Environment.IsDevelopment())
    });
 }
 
+// Configure middleware
+app.Use(async (context, next) =>
+{
+    var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+    try
+    {
+        logger.LogInformation("Handling request: " + context.Request.Path);
+        await next.Invoke();
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "An error occurred while handling the request.");
+        throw;
+    }
+    logger.LogInformation("Finished handling request");
+});
+
 
 // ---------------- Endpoints ----------------
 
@@ -85,6 +111,38 @@ app.MapPost("/login", async (BBDb db, LoginDto loginDto) =>
 
     // If user is found and password matches, return success
     return Results.Ok(new LoginResDto(user.Id, user.Username, user.Email, user.Chips));
+});
+
+app.MapPost("/signup", async (BBDb db, SignupDto signupDto) =>
+{
+    // Check for an existing user with the same username
+    var existingUsername = await db.Users.FirstOrDefaultAsync(u => u.Username == signupDto.Username);
+    if (existingUsername is not null)
+    {
+        return Results.BadRequest("User with that username already exists.");
+    }
+    var existingEmail = await db.Users.FirstOrDefaultAsync(u => u.Email == signupDto.Email);
+    if (existingEmail is not null)
+    {
+        return Results.BadRequest("User with that email already exists.");
+    }
+
+    // Create and add the new user
+    var newUser = new User(signupDto.Username, signupDto.Email, signupDto.Password);
+    var addUserResult = await db.Users.AddAsync(newUser);
+
+    // Save changes to the database
+    try
+    {
+        await db.SaveChangesAsync();
+        return Results.Ok("User created successfully.");
+    }
+    catch (Exception ex)
+    {
+        // Log the exception (if you have a logging mechanism)
+        // Return a server error result
+        return Results.Problem($"An error occurred while creating the user: {ex.Message}");
+    }
 });
 
 app.MapGet("/user/{id}", async (BBDb db, int id) => {
