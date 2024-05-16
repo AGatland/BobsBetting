@@ -65,11 +65,13 @@ if (app.Environment.IsDevelopment())
 // ---------------- Endpoints ----------------
 
 
-// SignalR
+// SignalR Game
 app.MapHub<GameHub>("/game/lobby");
-    
+
+// Testing endpoint
 app.MapGet("/", () => "Hello World!");
 
+// User endpoints
 app.MapPost("/login", async (BBDb db, LoginDto loginDto) =>
 {
     // Find user with matching username
